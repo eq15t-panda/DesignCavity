@@ -132,13 +132,13 @@ def plan_concave( roc1, L_values, wavelength, wz_target, beam_profile = False):
 
         # Stability and if, waist
         stability_values[i] = stability_condition(A,D)
-        z_array = np.linspace(0, L, 100)
+        z_array = np.linspace(0, L, 1000)
 
         if stability_values[i]:
             q_roots = np.roots([C, D - A, -B])
             q0 = q_roots[np.imag(q_roots) > 0][0]
 
-            w0 = np.sqrt(wavelength / (np.pi * np.imag(-1 / q0))) # waist is at z=0 (plane mirror) by definition
+            w0 = np.sqrt(wavelength / (np.pi * np.imag(-1 / q0))) # waist is at z=L (plane mirror) by definition
             waist_values.append(w0 * 1e6)
 
             # w(z) target value given in the fonction in m
