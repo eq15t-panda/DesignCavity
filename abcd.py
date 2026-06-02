@@ -104,10 +104,7 @@ def kogelnik_waist_concave_concave(R1, R2, L, wavelength):
 
 
 ### Plan Concave
-def plan_concave( roc1, L_values, wavelength, wz_target, beam_profile = False): 
-
-    n = 1.816       # Indice optique cristal
-    d = 10e-3       # cristal size 10 mm
+def plan_concave( roc1, L_values, wavelength,  wz_target, beam_profile = False): 
 
     stability_values = np.zeros(L_values.shape, dtype=bool)
 
@@ -119,12 +116,10 @@ def plan_concave( roc1, L_values, wavelength, wz_target, beam_profile = False):
     wz__lenths_array = []
     z__lenths_array = []
     
-
-
     for i, L in enumerate(L_values):
 
         # Propagation matrix 
-        M = ( M_sph_mirror(roc1) @ M_free(L) @ M_free(L))
+        M = (  M_free(L) @ M_sph_mirror(roc1) @ M_free(L))
         A = M[0, 0]
         B = M[0, 1]
         C = M[1, 0]
@@ -138,7 +133,7 @@ def plan_concave( roc1, L_values, wavelength, wz_target, beam_profile = False):
             q_roots = np.roots([C, D - A, -B])
             q0 = q_roots[np.imag(q_roots) > 0][0]
 
-            w0 = np.sqrt(wavelength / (np.pi * np.imag(-1 / q0))) # waist is at z=L (plane mirror) by definition
+            w0 = np.sqrt(wavelength / (np.pi * np.imag(-1 / q0))) # waist is at z=0 (plane mirror) by definition
             waist_values.append(w0 * 1e6)
 
             # w(z) target value given in the fonction in m
@@ -155,3 +150,55 @@ def plan_concave( roc1, L_values, wavelength, wz_target, beam_profile = False):
 
 
     return np.array(waist_values),    stability_values,    np.array(wz_close_to_taget_values),      np.array(z_close_to_taget_values),      wz__lenths_array,    z__lenths_array
+
+
+
+## Plan Concave
+def plan_concave_cristal( roc1, L_values, wavelength, d, n, wz_target, beam_profile = False): 
+
+    stability_values = np.zeros(L_values.shape, dtype=bool)
+
+    waist_values = []
+    wz_close_to_taget_values = []
+    z_close_to_taget_values = []
+    i_target = None
+    
+    wz__lenths_array = []
+    z__lenths_array = []
+    
+    for i, L in enumerate(L_values):
+
+        L_air = L - d    
+        # Propagation matrix 
+        M = ( M_free(d / n) @ M_free(L_air) @ M_sph_mirror(roc1) @ M_free(L_air) @ M_free(d / n) )
+        A = M[0, 0]
+        B = M[0, 1]
+        C = M[1, 0]
+        D = M[1, 1]
+
+        # Stability and if, waist
+        stability_values[i] = stability_condition(A,D)
+        z_array = np.linspace(0, L, 1000)
+
+        if stability_values[i]:
+            q_roots = np.roots([C, D - A, -B])
+            q0 = q_roots[np.imag(q_roots) > 0][0]
+
+            w0 = np.sqrt(wavelength / (np.pi * np.imag(-1 / q0))) # waist is at z=0 (plane mirror) by definition
+            waist_values.append(w0 * 1e6)
+
+            # w(z) target value given in the fonction in m
+            q_out = q0 + z_array  
+            w_array = np.sqrt(wavelength / (np.pi * np.imag( -1 / q_out)))
+
+            i_target = np.argmin(np.abs(w_array - wz_target))
+            wz_close_to_taget_values.append( w_array[i_target])
+            z_close_to_taget_values.append( z_array[i_target])
+
+            if beam_profile: 
+                wz__lenths_array.append(np.array(w_array))
+                z__lenths_array.append(np.array(z_array))
+
+
+    return np.array(waist_values),    stability_values,    np.array(wz_close_to_taget_values),      np.array(z_close_to_taget_values),      wz__lenths_array,    z__lenths_array
+
