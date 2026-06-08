@@ -40,7 +40,10 @@ def waist_and_position(q, wavelength):
         w0 : waist size
         z0 : waist position (relative to reference plane)
     """
-    zR = np.imag(q)
-    w0 = np.sqrt(wavelength * zR / np.pi)
+    if q is None:
+        return None, None
+
+    w0 = np.sqrt(wavelength / (np.pi * np.imag(-1 / q)))
     z0 = -np.real(q)
+
     return w0, z0
