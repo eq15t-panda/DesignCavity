@@ -43,7 +43,8 @@ def waist_and_position(q, wavelength):
     if q is None:
         return None, None
 
-    w0 = np.sqrt(wavelength / (np.pi * np.imag(-1 / q)))
-    z0 = -np.real(q)
+    else:
+        w0 = np.sqrt(wavelength / (np.pi * np.imag(-1 / q)))
+        z0 = -np.real(q)
 
-    return w0, z0
+        return w0, z0
